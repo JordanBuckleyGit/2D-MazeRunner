@@ -1,5 +1,7 @@
 {% extends "base.html" %}
-
+{% block scripts %}
+    <script type="module" src="{{ url_for('static', filename='menu.js') }}"></script>
+{% endblock %}
 {% block main_content %}
 <section id="menu">
     <h1>Welcome to the Maze Runner</h1>
