@@ -8,10 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     viewLeaderboardButton.addEventListener("click", () => {
-        // Fetch and display leaderboard
     });
 
     profileButton.addEventListener("click", () => {
-        // Open profile settings
     });
 });

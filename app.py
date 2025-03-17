@@ -95,6 +95,7 @@ def index():
     return render_template("base.html")
 
 @app.route("/game")
+# @login_required
 def game():
     return render_template("game.html")
 
