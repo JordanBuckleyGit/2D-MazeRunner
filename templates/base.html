@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Runner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{url_for('static', filename='eg.ico')}}">
+    <script type="module" src="{{ url_for('static', filename='menu.js') }}"></script>
+    {% block styles %} {% endblock %}
+</head>
+<body>
+    <canvas width="3200" height='2000' id='background'></canvas>
+    <header>
+        <nav>
+
+        </nav>
+    </header>
+
+    <main>
+        {% block main_content %}{% endblock %}
+    </main>
+
+    <footer>
+
+    </footer>
+
+</body>
+</html>
