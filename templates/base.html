@@ -17,7 +17,7 @@
                 {% if g.user %}
                 <li><a href="{{ url_for('game') }}">Play!</a></li>
                 <li><a href="{{url_for('index')}}">Instructions</a></li>
-                <li><a href="{{ url_for('profile', user_id = g.user ) }}">{{ g.user }}</a></li>
+                <li><a href="{{ url_for('user') }}">{{ g.user }}</a></li>
                 <li><a href="{{ url_for('logout') }}">Log out</a></li>
                 {% else %}
                 <li><a href="{{ url_for('login') }}">Login</a></li>
