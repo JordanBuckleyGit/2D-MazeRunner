@@ -11,9 +11,10 @@
     {% block styles %} {% endblock %}
 </head>
 <body>
-    <!-- <canvas width="3200" height='2000' id='background'></canvas> -->
+    {% block canvas %}{% endblock %}
     <header>
-        <nav>
+        {% block navigation %}
+        <!-- <nav>
             <ul>
                 {% if g.user %}
                     <li><a href="{{ url_for('game') }}">Play!</a></li>
@@ -26,18 +27,17 @@
                 {% endif %}
             </ul>
         </nav>
-    </header>
+    {% endblock %}
+    </header> -->
 
     <main>
         {% block main_content %}{% endblock %}
     </main>
 
     <footer>
-        <footer>
             {% block footer %}
-            <p>&copy;Web Dev 2, Jordan Buckley.</p>
+            <p>&copy;Web Dev 2 - Jordan Buckley.</p>
             {% endblock %}
-        </footer>
     </footer>
 
 </body>

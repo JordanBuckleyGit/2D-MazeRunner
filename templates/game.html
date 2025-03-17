@@ -1,15 +1,13 @@
 {% extends "base.html" %}
-{% block scripts %}
-    <script type="module" src="{{ url_for('static', filename='menu.js') }}"></script>
-{% endblock %}
-{% block main_content %}
-<section id="menu">
-    <h1>Welcome to the Maze Runner</h1>
-    <section id="game-menu">
-        <button id="start-game">Start Game</button>
-        <button id="view-leaderboard">View Leaderboard</button>
-        <button id="profile">Profile</button>
-    </section>
-</section>
 
+{% block scripts %}
+    <script type="module" src="{{ url_for('static', filename='game.js') }}"></script>
+{% endblock %}
+
+{% block canvas %}
+    <canvas width="3200" height="2000" id="background"></canvas>
+{% endblock %}
+
+{% block content %}
+    <!-- Game UI elements go here -->
 {% endblock %}

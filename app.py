@@ -91,11 +91,12 @@ def logout():
 ############
 
 @app.route("/")
+@login_required
 def index():
-    return render_template("base.html")
+    return render_template("menu.html")
 
 @app.route("/game")
-# @login_required
+@login_required
 def game():
     return render_template("game.html")
 
