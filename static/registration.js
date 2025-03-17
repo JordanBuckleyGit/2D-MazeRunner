@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function() {
     const loginSection = document.getElementById('login-section');
     if (!loginSection) return;
