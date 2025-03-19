@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+<script type="module" src="{{ url_for('static', filename='menu.js') }}"></script>
 {% block main_content %}
     <h1>{{ user.user_id }}</h1>
     <p>

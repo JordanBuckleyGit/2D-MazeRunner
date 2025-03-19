@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
 {% block scripts %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='game.css') }}">
     <script type="module" src="{{ url_for('static', filename='game.js') }}"></script>
 {% endblock %}
 
 {% block canvas %}
-    <canvas width="3200" height="2000" id="background"></canvas>
+<canvas id="background" width="800" height="600"></canvas>
 {% endblock %}
 
 {% block content %}

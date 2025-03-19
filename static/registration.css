@@ -22,7 +22,6 @@
     align-items: center;
   }
 
-  /* Main login/register container */
   #login-section {
     background-color: white;
     border-radius: 12px;
@@ -46,7 +45,6 @@
     }
   }
   
-  /* Page title */
   #login-section h1 {
     color: var(--primary-color);
     text-align: center;
@@ -56,14 +54,12 @@
     letter-spacing: -0.025em;
   }
   
-  /* Form styling */
   #login-form {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
   }
   
-  /* Labels */
   #login-form label {
     font-weight: 500;
     font-size: 0.875rem;
@@ -72,7 +68,6 @@
     display: block;
   }
   
-  /* Input fields */
   #login-form input[type="text"],
   #login-form input[type="password"] {
     width: 100%;
@@ -91,7 +86,6 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
   }
   
-  /* Submit button */
   #login-submit input[type="submit"] {
     background-color: var(--primary-color);
     color: white;
@@ -138,7 +132,6 @@
     text-decoration: underline;
   }
   
-  /* Page transition animations */
   .page-enter {
     opacity: 0;
     transform: translateX(40px);
