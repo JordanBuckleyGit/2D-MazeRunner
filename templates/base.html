@@ -13,22 +13,8 @@
 <body>
     {% block canvas %}{% endblock %}
     <header>
-        {% block navigation %}
-        <!-- <nav>
-            <ul>
-                {% if g.user %}
-                    <li><a href="{{ url_for('game') }}">Play!</a></li>
-                    <li><a href="{{ url_for('index') }}">Instructions</a></li>
-                    <li><a href="{{ url_for('user') }}">{{ g.user }}</a></li>
-                    <li><a href="{{ url_for('logout') }}">Log out</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('login') }}">Login</a></li>
-                    <li><a href="{{ url_for('registration') }}">Register</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endblock %}
-    </header> -->
+        {% block navigation %}{% endblock %}
+    </header>  
 
     <main>
         {% block main_content %}{% endblock %}
