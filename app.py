@@ -109,7 +109,7 @@ def user():
     db = get_db()
     user_id = session.get("user_id")
     user_data = db.execute("SELECT * FROM users WHERE user_id = ?;", (user_id,)).fetchone()
-    return render_template("user.html", user=user_data)
+    return render_template("profile.html", user=user_data)
 
 
 if __name__ == "__main__":
