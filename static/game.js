@@ -1,14 +1,36 @@
-const canvas = document.getElementById('background');
-const ctx = canvas.getContext('2d');
+let canvas, context;
+let page_height = window.innerHeight;
+let page_width = window.innerWidth;
 
-const tileSize = 40;
-const rows = canvas.height / tileSize;
-const cols = canvas.width / tileSize;
+let request_id;
+const fps = 30;
+const fpsInterval = 1000 / fps;
+let now, then = Date.now();
 
+const tileSize = 32;
+
+// Player Object
+let player = {
+    x: tileSize, 
+    y: tileSize, 
+    size: tileSize, 
+    speed: 4
+};
+
+// Movement Flags
+let moveLeft = false;
+let moveRight = false;
+let moveUp = false;
+let moveDown = false;
+
+let score = 0;
+let xhttp;
+
+// Maze (1 = Wall, 0 = Path)
 const maze = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
     [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
     [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
     [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
@@ -23,56 +45,118 @@ const maze = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1]
 ];
 
+const rows = maze.length;
+const cols = maze[0].length;
+
+// Load images
 const playerImg = new Image();
-playerImg.src = 'images/player.png';
+playerImg.src = 'static/images/player.png';
 
 const wallTexture = new Image();
 wallTexture.src = 'static/images/wall.jpg';
 
-const itemImages = {
-    health: 'images/health.png',
-    bomb: 'images/bomb.png'
+wallTexture.onload = playerImg.onload = function () {
+    init();
 };
 
-const player = { x: tileSize, y: tileSize, width: tileSize, height: tileSize };
+function init() {
+    canvas = document.querySelector("canvas");
+    context = canvas.getContext("2d");
 
-const items = [
-    { type: 'health', x: 5 * tileSize, y: 2 * tileSize },
-    { type: 'bomb', x: 8 * tileSize, y: 4 * tileSize }
-];
+    canvas.width = cols * tileSize;
+    canvas.height = rows * tileSize;
 
-// Draw Functions
+    window.addEventListener("keydown", activate, false);
+    window.addEventListener("keyup", deactivate, false);
+
+    request_id = requestAnimationFrame(gameLoop);
+}
+
 function drawMaze() {
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             if (maze[row][col] === 1) {
-                ctx.drawImage(wallTexture, col * tileSize, row * tileSize, tileSize, tileSize);
+                context.drawImage(wallTexture, col * tileSize, row * tileSize, tileSize, tileSize);
             } else {
-                ctx.fillStyle = 'white';
-                ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
+                context.fillStyle = 'white';
+                context.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
             }
         }
     }
 }
 
 function drawPlayer() {
-    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+    context.drawImage(playerImg, player.x, player.y, player.size, player.size);
 }
 
-function drawItems() {
-    items.forEach(item => {
-        const img = new Image();
-        img.src = itemImages[item.type];
-        ctx.drawImage(img, item.x, item.y, tileSize, tileSize);
-    });
+function updatePlayer() {
+    let newX = player.x;
+    let newY = player.y;
+
+    if (moveLeft) newX -= player.speed;
+    if (moveRight) newX += player.speed;
+    if (moveUp) newY -= player.speed;
+    if (moveDown) newY += player.speed;
+
+    let col = Math.floor(newX / tileSize);
+    let row = Math.floor(newY / tileSize);
+    let colRight = Math.floor((newX + player.size - 1) / tileSize);
+    let rowBottom = Math.floor((newY + player.size - 1) / tileSize);
+
+    if (maze[row][col] === 0 && maze[rowBottom][colRight] === 0) {
+        player.x = newX;
+        player.y = newY;
+    }
 }
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawMaze();
-    drawItems();
-    drawPlayer();
-    requestAnimationFrame(gameLoop);
+    request_id = requestAnimationFrame(gameLoop);
+
+    now = Date.now();
+    let elapsed = now - then;
+
+    if (elapsed > fpsInterval) {
+        then = now - (elapsed % fpsInterval);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        drawMaze();
+        updatePlayer();
+        drawPlayer();
+    }
 }
 
-gameLoop();
+function activate(event) {
+    if (event.key === "ArrowLeft") moveLeft = true;
+    if (event.key === "ArrowRight") moveRight = true;
+    if (event.key === "ArrowUp") moveUp = true;
+    if (event.key === "ArrowDown") moveDown = true;
+}
+
+function deactivate(event) {
+    if (event.key === "ArrowLeft") moveLeft = false;
+    if (event.key === "ArrowRight") moveRight = false;
+    if (event.key === "ArrowUp") moveUp = false;
+    if (event.key === "ArrowDown") moveDown = false;
+}
+
+// Stop game and save score
+function stop(outcome_txt) {
+    window.removeEventListener("keydown", activate, false);
+    window.removeEventListener("keyup", deactivate, false);
+    cancelAnimationFrame(request_id);
+    document.querySelector("#outcome").innerHTML = outcome_txt + " Score: " + score;
+
+    let data = new FormData();
+    data.append("score", score);
+
+    xhttp = new XMLHttpRequest();
+    xhttp.addEventListener("readystatechange", handle_response, false);
+    xhttp.open("POST", "/store_score", true);
+    xhttp.send(data);
+}
+
+function handle_response() {
+    if (xhttp.readyState === 4 && xhttp.status === 200) {
+        console.log(xhttp.responseText === "success" ? "Yes" : "No");
+    }
+}
