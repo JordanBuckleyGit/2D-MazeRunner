@@ -105,55 +105,49 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function createCursorTrail() {
-        const cursorTrailContainer = document.createElement('div');
-        cursorTrailContainer.className = 'cursor-trail-container';
-        document.body.appendChild(cursorTrailContainer);
-        
-        document.addEventListener('mousemove', function(e) {
-            if (Math.random() > 0.7) { // Reduce number of particles for performance
-                const particle = document.createElement('div');
-                particle.className = 'cursor-particle';
-                particle.style.left = e.pageX + 'px';
-                particle.style.top = e.pageY + 'px';
-                particle.style.backgroundColor = `hsl(${Math.random() * 60 + 240}, 100%, 70%)`;
-                particle.style.width = `${Math.random() * 8 + 2}px`;
-                particle.style.height = particle.style.width;
-                cursorTrailContainer.appendChild(particle);
-                
-                setTimeout(() => {
-                    if (particle.parentNode === cursorTrailContainer) {
-                        cursorTrailContainer.removeChild(particle);
-                    }
-                }, 1000);
-            }
+        const cursor = document.createElement('class');
+        cursor.className = 'cursor-trail';
+        document.body.appendChild(cursor);
+    
+        const trail = document.createElement('class');
+        trail.className = 'cursor-trail-glow';
+        document.body.appendChild(trail);
+    
+        let cursorX = 0;
+        let cursorY = 0;
+        let trailX = 0;
+        let trailY = 0;
+    
+        document.addEventListener('mousemove', (e) => {
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    
+            cursorX = e.clientX + scrollX;
+            cursorY = e.clientY + scrollY;
         });
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            .cursor-trail-container {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                pointer-events: none;
-                z-index: 9999;
-                overflow: hidden;
-            }
-            .cursor-particle {
-                position: absolute;
-                border-radius: 50%;
-                pointer-events: none;
-                opacity: 0.7;
-                transform: translate(-50%, -50%);
-                animation: particleFade 1s forwards ease-out;
-            }
-            @keyframes particleFade {
-                0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-                100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
+    
+        function animate() {
+            const dx = cursorX - trailX;
+            const dy = cursorY - trailY;
+            
+            trailX += dx * 0.15; // Increased smoothing factor
+            trailY += dy * 0.15;
+    
+            cursor.style.transform = `translate3d(${cursorX - scrollX}px, ${cursorY - scrollY}px, 0)`;
+            trail.style.transform = `translate3d(${trailX - scrollX}px, ${trailY - scrollY}px, 0)`;
+    
+            requestAnimationFrame(animate);
+        }
+    
+        animate();
+    
+        window.addEventListener('scroll', () => {
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+            
+            cursor.style.transform = `translate3d(${cursorX - scrollX}px, ${cursorY - scrollY}px, 0)`;
+            trail.style.transform = `translate3d(${trailX - scrollX}px, ${trailY - scrollY}px, 0)`;
+        });
     }
     
     // Create flash effect for game start

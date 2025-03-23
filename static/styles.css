@@ -336,3 +336,28 @@
     background-clip: text;
     color: transparent;
   }
+
+
+  .cursor-trail {
+    width: 8px;
+    height: 8px;
+    background: rgba(110, 231, 183, 0.8);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
+
+.cursor-trail-glow {
+    width: 16px;
+    height: 16px;
+    background: rgba(110, 231, 183, 0.3);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
