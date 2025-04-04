@@ -1,14 +1,41 @@
 body {
-    margin: 0 auto;
-    padding-top: 20rem;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-sizing: border-box;
+}
+
+.game-container {
+    position: relative;
+    width: 100vw;
     height: 100vh;
-    background-color: black;
+    background: #000;
 }
 
 canvas {
-    background-color: white;
-    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    cursor: none;
+}
+
+main {
+    display: none;
+}
+
+nav {
+    display: none;
+}
+
+footer {
+    display: none;
+    position: relative;
+    overflow: hidden;
 }

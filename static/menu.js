@@ -105,11 +105,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function createCursorTrail() {
-        const cursor = document.createElement('class');
+        const cursor = document.createElement('div');
         cursor.className = 'cursor-trail';
         document.body.appendChild(cursor);
     
-        const trail = document.createElement('class');
+        const trail = document.createElement('div');
         trail.className = 'cursor-trail-glow';
         document.body.appendChild(trail);
     
@@ -273,7 +273,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Focus the first button when the page loads
     setTimeout(() => {
         const firstButton = document.querySelector('#game-menu button');
         if (firstButton) {

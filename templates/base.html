@@ -6,7 +6,6 @@
     <title>Maze Runner</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="icon" href="{{url_for('static', filename='images/favicon.ico')}}">
-    <script type="module" src="{{ url_for('static', filename='menu.js') }}"></script>
     {% block scripts %}{% endblock %}
     {% block styles %} {% endblock %}
 </head>
@@ -14,16 +13,16 @@
     {% block canvas %}{% endblock %}
     <header>
         {% block navigation %}{% endblock %}
-    </header>  
+    </header> 
 
     <main>
         {% block main_content %}{% endblock %}
     </main>
 
     <footer>
-            {% block footer %}
-            <p>&copy;Web Dev 2 - Jordan Buckley.</p>
-            {% endblock %}
+        {% block footer %}
+        <p>&copy;Web Dev 2 - Jordan Buckley.</p>
+        {% endblock %}
     </footer>
 
 </body>

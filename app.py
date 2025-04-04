@@ -111,6 +111,5 @@ def user():
     user_data = db.execute("SELECT * FROM users WHERE user_id = ?;", (user_id,)).fetchone()
     return render_template("profile.html", user=user_data)
 
-
 if __name__ == "__main__":
     app.run(debug=True)
