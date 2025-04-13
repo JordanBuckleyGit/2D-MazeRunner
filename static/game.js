@@ -6,7 +6,17 @@ let fpsInterval = 1000 / 30;
 let now;
 let then = Date.now();
 
-const tileSize = 32;
+const tileSize = 32; // Size of each tile in the tileset
+const tilesetCols = 4; // Number of columns in the tileset
+const tilesetRows = 2; // Number of rows in the tileset
+
+const tileMapping = {
+    0: { col: 1, row: 1, width: 32, height: 32 }, // Floor tile (e.g., at column 1, row 0 in the tileset)
+    1: { col: 1, row: 9, width: 32, height: 32 }, // Wall tile
+    2: { col: 4, row: 7, width: 32, height: 16 }  // Door tile (smaller height)
+};
+
+// player is 1: { col: 6, row: 5 }
 
 // player obj
 let player = {
@@ -46,6 +56,8 @@ wallTexture.src = 'static/images/wall.png';
 const tileSprite = new Image();
 tileSprite.src = 'static/images/tiles.png';
 
+const tileset = new Image();
+tileset.src = 'static/images/tileset.png';
 
 wallTexture.onload = playerImg.onload = function () {
     init();
@@ -150,14 +162,23 @@ function drawMaze() {
     for (let row = startRow; row < endRow; row++) {
         for (let col = startCol; col < endCol; col++) {
             if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
-                if (maze[row][col] === 1) {
-                    context.drawImage(wallTexture, col * tileSize, row * tileSize, tileSize, tileSize);
-                } else {
-                    context.drawImage(tileSprite, col * tileSize, row * tileSize, tileSize, tileSize);
+                const tileValue = maze[row][col];
+                const tile = tileMapping[tileValue];
+
+                if (tile) {
+                    const sx = tile.col * tileSize; // Source X in the tileset
+                    const sy = tile.row * tileSize; // Source Y in the tileset
+
+                    context.drawImage(
+                        tileset, // Source image
+                        sx, sy, tileSize, tileSize, // Source rectangle
+                        col * tileSize, row * tileSize, tileSize, tileSize // Destination rectangle
+                    );
                 }
             }
         }
     }
+
     context.restore();
 }
 
