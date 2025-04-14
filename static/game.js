@@ -11,11 +11,16 @@ const tilesetCols = 4; // Number of columns in the tileset
 const tilesetRows = 2; // Number of rows in the tileset
 
 const tileMapping = {
-    0: { col: 1, row: 1, width: 32, height: 32 }, // Floor tile (e.g., at column 1, row 0 in the tileset)
-    1: { col: 1, row: 9, width: 32, height: 32 }, // Wall tile
-    2: { col: 4, row: 7, width: 32, height: 16 },  // Door tile (smaller height)
-    3: { col: 1, row: 3, width: 32, height: 32 }  // Health item
+    0: { col: 1, row: 1, width: 32, height: 32 }, // Floor tile
+    1: { col: 1, row: 2, width: 32, height: 32 }, // Wall tile
+    2: { col: 1, row: 4, width: 32, height: 16 }, // Door tile
+    3: { col: 1, row: 1, width: 64, height: 64 }, // Health item
+    key: { col: 9, row: 9, width: 16, height: 16 } // Key (adjust col/row as needed)
 };
+
+
+// key: { col: 8, row: 9, width: 16, height: 16 } HEALTH
+
 
 // player is 1: { col: 6, row: 5 }
 
@@ -58,6 +63,14 @@ let keysCollected = 0;
 
 const maxKeys = 3; // Total number of keys
 
+let door = {
+    x: 0,
+    y: 0,
+    width: tileSize,
+    height: tileSize,
+    unlocked: false
+};
+
 // Load images
 const playerImg = new Image();
 playerImg.src = 'static/images/player.png';
@@ -68,7 +81,7 @@ const tileSprite = new Image();
 tileSprite.src = 'static/images/tiles.png';
 
 const tileset = new Image();
-tileset.src = 'static/images/tileset.png';
+tileset.src = 'static/images/Dungeon_Tileset.png';
 
 const healthItemImg = new Image();
 healthItemImg.src = 'static/images/health.png';
@@ -140,6 +153,11 @@ function generateMaze() {
     // Ensure start and end are open
     maze[1][1] = 0;
     maze[gridRows - 2][gridCols - 2] = 0;
+
+    // Place the door at the bottom-right corner
+    door.x = (gridCols - 2) * tileSize;
+    door.y = (gridRows - 2) * tileSize;
+    door.unlocked = false;
 
     placeHealthItem();
     placeKeys();
@@ -484,10 +502,14 @@ function drawKeys() {
 
     keys.forEach(key => {
         if (!key.collected) {
+            const keyTile = tileMapping.key; // Get the key tile from tileMapping
+            const sx = keyTile.col * keyTile.width; // Source X in the tileset
+            const sy = keyTile.row * keyTile.height; // Source Y in the tileset
+
             context.drawImage(
-                tileset, // Source image
-                0, 0, tileSize, tileSize, // Assuming the key is at col 0, row 0 in the tileset
-                key.x, key.y, tileSize, tileSize // Destination rectangle
+                tileset, // Source image (tileset)
+                sx, sy, keyTile.width, keyTile.height, // Source rectangle
+                key.x, key.y, tileSize, tileSize // Destination rectangle (scaled to tileSize)
             );
         }
     });
@@ -526,6 +548,24 @@ function checkDoorInteraction() {
     }
 }
 
+function drawDoor() {
+    context.save();
+    context.scale(camera.zoom, camera.zoom);
+    context.translate(-camera.x, -camera.y);
+
+    const doorTile = tileMapping[2]; // Door tile
+    const sx = doorTile.col * doorTile.width;
+    const sy = doorTile.row * doorTile.height;
+
+    context.drawImage(
+        tileset, // Source image (tileset)
+        sx, sy, doorTile.width, doorTile.height, // Source rectangle
+        door.x, door.y, tileSize, tileSize // Destination rectangle
+    );
+
+    context.restore();
+}
+
 function placeHealthItem() {
     let validPosition = false;
 
@@ -547,15 +587,15 @@ function drawHealthItem() {
     context.save();
     context.scale(camera.zoom, camera.zoom);
     context.translate(-camera.x, -camera.y);
+
     if (!healthItem.collected) {
         context.drawImage(
-            healthItemImg,
-            healthItem.x,
-            healthItem.y,
-            tileSize,
-            tileSize
+            healthItemImg, // Source image (health.png)
+            5, 5, 34, 30, // Source rectangle (entire image)
+            healthItem.x, healthItem.y, tileSize, tileSize // Destination rectangle
         );
     }
+
     context.restore();
 }
 
