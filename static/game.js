@@ -14,7 +14,7 @@ const tileMapping = {
     0: { col: 1, row: 1, width: 32, height: 32 }, // Floor tile
     1: { col: 1, row: 2, width: 32, height: 32 }, // Wall tile
     2: { col: 1, row: 4, width: 32, height: 16 }, // Door tile
-    3: { col: 1, row: 1, width: 64, height: 64 }, // Health item
+    health: { col: 8, row: 9, width: 16, height: 16 }, // Health item
     key: { col: 9, row: 9, width: 16, height: 16 } // Key (adjust col/row as needed)
 };
 
@@ -83,8 +83,8 @@ tileSprite.src = 'static/images/tiles.png';
 const tileset = new Image();
 tileset.src = 'static/images/Dungeon_Tileset.png';
 
-const healthItemImg = new Image();
-healthItemImg.src = 'static/images/health.png';
+// const healthItemImg = new Image();
+// healthItemImg.src = 'static/images/health.png';
 
 wallTexture.onload = playerImg.onload = function () {
     init();
@@ -243,6 +243,9 @@ function drawHUD() {
     context.fillStyle = '#ffff44';
     context.fillText(`Level ${level}`, canvas.width / 3, canvas.height - hudHeight / 2 + 8);
 
+    context.fillStyle = '#ffff44';
+    context.fillText(`Keys ${keysCollected}`, canvas.width / 6, canvas.height - hudHeight / 2 + 8);
+
     context.fillStyle = '#ffffff';
     const minutes = Math.floor(gameTime / 60000);
     const seconds = Math.floor((gameTime % 60000) / 1000);
@@ -313,6 +316,7 @@ function gameLoop() {
         drawMaze();
         drawHealthItem(); // Draw the health item
         drawKeys();
+        drawDoor();
         updatePlayer();
         updateEnemies();
         drawPlayer();
@@ -535,6 +539,14 @@ function checkKeyCollection() {
 function checkDoorInteraction() {
     if (
         keysCollected === maxKeys && // Require all keys
+        !door.unlocked // Ensure the door is not already unlocked
+    ) {
+        door.unlocked = true; // Unlock the door
+        console.log("Door unlocked!");
+    }
+
+    if (
+        door.unlocked && // Door must be unlocked
         player.x < door.x + door.width &&
         player.x + player.size > door.x &&
         player.y < door.y + door.height &&
@@ -589,10 +601,14 @@ function drawHealthItem() {
     context.translate(-camera.x, -camera.y);
 
     if (!healthItem.collected) {
+        const healthTile = tileMapping.health; // Get the health tile from tileMapping
+        const sx = healthTile.col * healthTile.width; // Source X in the tileset
+        const sy = healthTile.row * healthTile.height; // Source Y in the tileset
+
         context.drawImage(
-            healthItemImg, // Source image (health.png)
-            5, 5, 34, 30, // Source rectangle (entire image)
-            healthItem.x, healthItem.y, tileSize, tileSize // Destination rectangle
+            tileset, // Source image (tileset)
+            sx, sy, healthTile.width, healthTile.height, // Source rectangle
+            healthItem.x, healthItem.y, tileSize, tileSize // Destination rectangle (scaled to tileSize)
         );
     }
 
