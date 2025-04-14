@@ -13,7 +13,8 @@ const tilesetRows = 2; // Number of rows in the tileset
 const tileMapping = {
     0: { col: 1, row: 1, width: 32, height: 32 }, // Floor tile (e.g., at column 1, row 0 in the tileset)
     1: { col: 1, row: 9, width: 32, height: 32 }, // Wall tile
-    2: { col: 4, row: 7, width: 32, height: 16 }  // Door tile (smaller height)
+    2: { col: 4, row: 7, width: 32, height: 16 },  // Door tile (smaller height)
+    3: { col: 1, row: 3, width: 32, height: 32 }  // Health item
 };
 
 // player is 1: { col: 6, row: 5 }
@@ -36,6 +37,11 @@ let score = 0;
 let xhttp;
 
 let health = 3;
+let healthItem = {
+    x: 0,
+    y: 0,
+    collected: false
+};
 let level = 1;
 let gameTime = 0;
 let camera = {
@@ -46,6 +52,11 @@ let camera = {
 
 let maze = [];
 let gridRows, gridCols;
+
+let keys = [];
+let keysCollected = 0;
+
+const maxKeys = 3; // Total number of keys
 
 // Load images
 const playerImg = new Image();
@@ -58,6 +69,9 @@ tileSprite.src = 'static/images/tiles.png';
 
 const tileset = new Image();
 tileset.src = 'static/images/tileset.png';
+
+const healthItemImg = new Image();
+healthItemImg.src = 'static/images/health.png';
 
 wallTexture.onload = playerImg.onload = function () {
     init();
@@ -126,6 +140,9 @@ function generateMaze() {
     // Ensure start and end are open
     maze[1][1] = 0;
     maze[gridRows - 2][gridCols - 2] = 0;
+
+    placeHealthItem();
+    placeKeys();
 }
 
 function addFrontier(x, y, frontier) {
@@ -247,6 +264,16 @@ function updatePlayer() {
 
     if (canMoveX) player.x = newX;
     if (canMoveY) player.y = newY;
+
+    if (!healthItem.collected &&
+        health < 3 && 
+        player.x < healthItem.x + tileSize &&
+        player.x + player.size > healthItem.x &&
+        player.y < healthItem.y + tileSize &&
+        player.y + player.size > healthItem.y) {
+        health++;
+        healthItem.collected = true;
+    }
 }
 
 function gameLoop() {
@@ -266,10 +293,15 @@ function gameLoop() {
 
         updateCamera();
         drawMaze();
+        drawHealthItem(); // Draw the health item
+        drawKeys();
         updatePlayer();
         updateEnemies();
         drawPlayer();
         drawEnemies();
+
+        checkKeyCollection();
+        checkDoorInteraction();
 
         drawHUD();
     }
@@ -424,6 +456,107 @@ function hasLineOfSight(x1, y1, x2, y2) {
         }
     }
     return true; // No walls in the way
+}
+
+function placeKeys() {
+    keys = [];
+    keysCollected = 0;
+
+    for (let i = 0; i < maxKeys; i++) {
+        let validPosition = false;
+
+        while (!validPosition) {
+            const col = Math.floor(Math.random() * gridCols);
+            const row = Math.floor(Math.random() * gridRows);
+
+            if (maze[row][col] === 0) { // Place only on floor tiles
+                keys.push({ x: col * tileSize, y: row * tileSize, collected: false });
+                validPosition = true;
+            }
+        }
+    }
+}
+
+function drawKeys() {
+    context.save();
+    context.scale(camera.zoom, camera.zoom);
+    context.translate(-camera.x, -camera.y);
+
+    keys.forEach(key => {
+        if (!key.collected) {
+            context.drawImage(
+                tileset, // Source image
+                0, 0, tileSize, tileSize, // Assuming the key is at col 0, row 0 in the tileset
+                key.x, key.y, tileSize, tileSize // Destination rectangle
+            );
+        }
+    });
+
+    context.restore();
+}
+
+function checkKeyCollection() {
+    keys.forEach(key => {
+        if (
+            !key.collected &&
+            player.x < key.x + tileSize &&
+            player.x + player.size > key.x &&
+            player.y < key.y + tileSize &&
+            player.y + player.size > key.y
+        ) {
+            key.collected = true;
+            keysCollected++;
+        }
+    });
+}
+
+function checkDoorInteraction() {
+    if (
+        keysCollected === maxKeys && // Require all keys
+        player.x < door.x + door.width &&
+        player.x + player.size > door.x &&
+        player.y < door.y + door.height &&
+        player.y + player.size > door.y
+    ) {
+        level++;
+        generateMaze(); // Generate a new maze for the next level
+        generateEnemies(); // Generate new enemies
+        player.x = tileSize; // Reset player position
+        player.y = tileSize;
+    }
+}
+
+function placeHealthItem() {
+    let validPosition = false;
+
+    while (!validPosition) {
+        const col = Math.floor(Math.random() * gridCols);
+        const row = Math.floor(Math.random() * gridRows);
+
+        if (maze[row][col] === 0) { // Place only on floor tiles
+            healthItem.x = col * tileSize;
+            healthItem.y = row * tileSize;
+            validPosition = true;
+        }
+    }
+
+    healthItem.collected = false; // Reset collected state
+}
+
+function drawHealthItem() {
+    context.save();
+    context.scale(camera.zoom, camera.zoom);
+    context.translate(-camera.x, -camera.y);
+    if (!healthItem.collected) {
+        context.drawImage(
+            healthItemImg,
+            healthItem.x,
+            healthItem.y,
+            tileSize,
+            tileSize
+        );
+    }
+    context.restore();
 }
 
 function activate(event) {
