@@ -152,12 +152,19 @@ function generateMaze() {
 
     // Ensure start and end are open
     maze[1][1] = 0;
-    maze[gridRows - 2][gridCols - 2] = 0;
 
-    // Place the door at the bottom-right corner
-    door.x = (gridCols - 2) * tileSize;
-    door.y = (gridRows - 2) * tileSize;
-    door.unlocked = false;
+    // Find a valid floor tile for the door
+    let doorPlaced = false;
+    for (let row = gridRows - 2; row >= 0 && !doorPlaced; row--) {
+        for (let col = gridCols - 2; col >= 0 && !doorPlaced; col--) {
+            if (maze[row][col] === 0) { // Check if it's a floor tile
+                door.x = col * tileSize;
+                door.y = row * tileSize;
+                door.unlocked = false;
+                doorPlaced = true;
+            }
+        }
+    }
 
     placeHealthItem();
     placeKeys();
