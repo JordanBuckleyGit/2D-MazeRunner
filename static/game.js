@@ -13,7 +13,7 @@ const tilesetRows = 2; // Number of rows in the tileset
 const tileMapping = {
     0: { col: 1, row: 1, width: 32, height: 32 }, // Floor tile
     1: { col: 1, row: 2, width: 32, height: 32 }, // Wall tile
-    2: { col: 1, row: 4, width: 32, height: 16 }, // Door tile
+    2: { col: 1, row: 4, width: 32, height: 16 }, // Door tile # change
     health: { col: 8, row: 9, width: 16, height: 16 }, // Health item
     key: { col: 9, row: 9, width: 16, height: 16 } // Key (adjust col/row as needed)
 };
