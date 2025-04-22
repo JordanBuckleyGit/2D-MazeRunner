@@ -47,6 +47,8 @@ let healthItem = {
     collected: false
 };
 
+let previousHealth = health; // Initialize with the starting health
+
 let potion = {
     x: 0,
     y: 0,
@@ -463,7 +465,9 @@ function generateEnemies() {
             y: y,
             size: tileSize,
             speed: 2 + (level * 0.2),
-            direction: Math.floor(Math.random() * 4)
+            direction: Math.floor(Math.random() * 4),
+            pause: false, // Add pause state
+            pauseTimer: 0 // Add timer for pausing
         };
         enemies.push(enemy);
     }
@@ -473,60 +477,88 @@ function updateEnemies() {
     enemies.forEach(enemy => {
         let canSeePlayer = false;
         let distance = Math.sqrt(Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2));
+
+        // Check if the enemy can see the player
         if (distance < 300) {
-            if (hasLineOfSight(enemy.x + enemy.size / 2, enemy.y + enemy.size / 2, player.x + player.size / 2, player.y + player.size / 2)) {
+            if (hasLineOfSight(
+                enemy.x + enemy.size / 2,
+                enemy.y + enemy.size / 2,
+                player.x + player.size / 2,
+                player.y + player.size / 2
+            )) {
                 canSeePlayer = true;
             }
         }
 
         if (canSeePlayer) {
+            // Move toward the player
             let newX = enemy.x;
             let newY = enemy.y;
 
-            if (player.x > enemy.x && isValidMove(enemy.x + enemy.speed, enemy.y)) newX += enemy.speed;
-            else if (player.x < enemy.x && isValidMove(enemy.x - enemy.speed, enemy.y)) newX -= enemy.speed;
+            if (player.x > enemy.x && isValidMove(enemy.x + enemy.speed, enemy.y)) {
+                newX += enemy.speed;
+            } else if (player.x < enemy.x && isValidMove(enemy.x - enemy.speed, enemy.y)) {
+                newX -= enemy.speed;
+            }
 
-            if (player.y > enemy.y && isValidMove(enemy.x, enemy.y + enemy.speed)) newY += enemy.speed;
-            else if (player.y < enemy.y && isValidMove(enemy.x, enemy.y - enemy.speed)) newY -= enemy.speed;
+            if (player.y > enemy.y && isValidMove(enemy.x, enemy.y + enemy.speed)) {
+                newY += enemy.speed;
+            } else if (player.y < enemy.y && isValidMove(enemy.x, enemy.y - enemy.speed)) {
+                newY -= enemy.speed;
+            }
 
+            // Only update position if the move is valid
             if (isValidMove(newX, newY)) {
                 enemy.x = newX;
                 enemy.y = newY;
+            } else {
+                console.warn(`Enemy at (${enemy.x}, ${enemy.y}) stuck trying to move to (${newX}, ${newY})`);
             }
         } else {
+            // Random movement when not chasing the player
             let newX = enemy.x;
             let newY = enemy.y;
 
             switch (enemy.direction) {
-                case 0: newY -= enemy.speed; break;
-                case 1: newX += enemy.speed; break;
-                case 2: newY += enemy.speed; break;
-                case 3: newX -= enemy.speed; break;
+                case 0: newY -= enemy.speed; break; // Up
+                case 1: newX += enemy.speed; break; // Right
+                case 2: newY += enemy.speed; break; // Down
+                case 3: newX -= enemy.speed; break; // Left
             }
 
             if (isValidMove(newX, newY)) {
                 enemy.x = newX;
                 enemy.y = newY;
             } else {
+                // Change direction if the move is invalid
                 enemy.direction = Math.floor(Math.random() * 4);
             }
 
+            // Occasionally change direction randomly
             if (Math.random() < 0.01) {
                 enemy.direction = Math.floor(Math.random() * 4);
             }
         }
 
         // Enemy collision with player
-        if (!isAdmin && isValidMove(enemy.x, enemy.y) &&
+        if (!isAdmin &&
             player.x < enemy.x + enemy.size &&
             player.x + player.size > enemy.x &&
             player.y < enemy.y + enemy.size &&
             player.y + player.size > enemy.y) {
             health--;
-            console.log("Player hit by enemy! Health:", health); // Debugging log
+            console.log("Player hit by enemy! Health:", health);
             player.x = tileSize;
             player.y = tileSize;
         }
+        if (health < previousHealth) {
+            console.log("Health decreased! Respawning enemies...");
+            generateEnemies(); // Respawn enemies
+        }
+
+    // Update previous health
+    previousHealth = health;
+
     });
 }
 
@@ -857,59 +889,28 @@ function stop(outcome_txt) {
     }
 }
 
-// Assuming startGame() is called after user interaction to handle music and init
 function startGame() {
-    init(); // Initialize the game graphics and logic
-    // gameLoop is already called by init
+    init();
 }
 
-// This function is likely called by a user interaction (e.g., button click)
-function startMusicAndGame() {
-    if (backgroundMusic) {
-        let playPromise = backgroundMusic.play();
+document.addEventListener('DOMContentLoaded', function () {
+    let menuMusic = document.getElementById('menu-music');
 
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                console.log('Background music started.');
-                startGame(); // Start the game after music
-            }).catch(error => {
-                console.log('Autoplay prevented. Starting game without music.', error);
-                startGame(); // Start the game even if music autoplay fails
-            });
-        } else {
-            startGame(); // Start the game as fallback
+    if (menuMusic) {
+        menuMusic.volume = 0.2; // Set volume to 20%
+        menuMusic.loop = true;
+
+        if (menuMusic.paused) {
+            const playPromise = menuMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log("Game music started.");
+                }).catch(error => {
+                    console.warn("Game music autoplay prevented:", error);
+                });
+            }
         }
-
-        backgroundMusic.loop = true; // Ensure the music loops
     } else {
-        // If backgroundMusic element is not found
-        console.error("Background music element not found!");
-        startGame();
-    }
-
-    // Remove the event listener after the game starts
-    if (startGameButton) {
-        startGameButton.removeEventListener('click', startMusicAndGame);
-    }
-}
-document.addEventListener('DOMContentLoaded', () => {
-    startGameButton = window.startGameButton;
-
-    if (startGameButton) {
-        startGameButton.addEventListener('click', startMusicAndGame);
-    } else {
-        console.warn("Start game button not found! Starting game directly.");
-        startGame(); // Start the game directly if the button is missing
+        console.error("Menu music element not found in the game!");
     }
 });
-// You might need an initial call to set up the event listener for the start button
-// For example, in a script tag that runs after the DOM is loaded:
-// document.addEventListener('DOMContentLoaded', () => {
-//     startGameButton = document.getElementById('startGameButton');
-//     if (startGameButton) {
-//         startGameButton.addEventListener('click', startMusicAndGame);
-//     } else {
-//          // If there's no start button, maybe call startGame directly
-//          // startGame();
-//     }
-// });
