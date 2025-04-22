@@ -17,7 +17,12 @@ let tileMapping = {
     2: { col: 7, row: 3, width: 16, height: 16 }, // Door tile
     health: { col: 8, row: 9, width: 16, height: 16 }, // Health item
     potion: { col: 7, row: 8, width: 16, height: 16 },
-    key: { col: 9, row: 9, width: 16, height: 16 } // Key
+    key: { col: 9, row: 9, width: 16, height: 16 }, // Key
+    // decor: { col: 1, row: 9, width: 16, height: 16 } // Decorative item
+    decor1: { col: 0, row: 9, width: 16, height: 16 }, // Decorative item 1
+    decor2: { col: 7, row: 7, width: 16, height: 16 }, // Decorative item 2
+    decor3: { col: 9, row: 5, width: 16, height: 16 }  // Decorative item 3
+
 };
 
 // Game State Variables
@@ -47,6 +52,8 @@ let potion = {
     y: 0,
     collected: false
 }
+
+let decorativeItems = [];
 
 let level = 1; // This is used as the score now
 let gameTime = 0;
@@ -188,6 +195,8 @@ function generateMaze() {
     placeHealthItem();
     placePotion(); // Place the potion
     placeKeys();
+    placeDecorativeItems(5); // Place 10 decorative items
+
 }
 
 function addFrontier(x, y, frontier) {
@@ -240,6 +249,53 @@ function drawMaze() {
             }
         }
     }
+
+    context.restore();
+}
+
+function placeDecorativeItems(count) {
+    decorativeItems = []; // Clear any existing decorative items
+
+    for (let i = 0; i < count; i++) {
+        let validPosition = false;
+        let item = { x: 0, y: 0, type: "" }; // Default decorative item
+
+        while (!validPosition) {
+            let col = Math.floor(Math.random() * gridCols);
+            let row = Math.floor(Math.random() * gridRows);
+
+            if (maze[row][col] === 0) { // Ensure the position is valid (not a wall)
+                item.x = col * tileSize;
+                item.y = row * tileSize;
+
+                // Randomly select one of the three decorative items
+                let decorTypes = ["decor1", "decor2", "decor3"];
+                item.type = decorTypes[Math.floor(Math.random() * decorTypes.length)];
+
+                validPosition = true;
+            }
+        }
+
+        decorativeItems.push(item);
+    }
+}
+
+function drawDecorativeItems() {
+    context.save();
+    context.scale(camera.zoom, camera.zoom);
+    context.translate(-camera.x, -camera.y);
+
+    decorativeItems.forEach(item => {
+        let decorTile = tileMapping[item.type]; // Use the type to get the correct tile mapping
+        let sx = decorTile.col * decorTile.width;
+        let sy = decorTile.row * decorTile.height;
+
+        context.drawImage(
+            tileset,
+            sx, sy, decorTile.width, decorTile.height,
+            item.x, item.y, tileSize, tileSize
+        );
+    });
 
     context.restore();
 }
@@ -368,6 +424,7 @@ function gameLoop() {
         updateEnemies();
         drawPlayer();
         drawEnemies();
+        drawDecorativeItems(); // Draw decorative items
         checkGameEnd();
 
         checkKeyCollection();
@@ -808,7 +865,7 @@ function startGame() {
 
 // This function is likely called by a user interaction (e.g., button click)
 function startMusicAndGame() {
-     if (backgroundMusic) {
+    if (backgroundMusic) {
         let playPromise = backgroundMusic.play();
 
         if (playPromise !== undefined) {
@@ -823,19 +880,28 @@ function startMusicAndGame() {
             startGame(); // Start the game as fallback
         }
 
-        backgroundMusic.loop = true;
-     } else {
-         // If backgroundMusic element is not found
-         startGame();
-     }
+        backgroundMusic.loop = true; // Ensure the music loops
+    } else {
+        // If backgroundMusic element is not found
+        console.error("Background music element not found!");
+        startGame();
+    }
 
-
-    // Assuming there is a button with id="startGameButton"
+    // Remove the event listener after the game starts
     if (startGameButton) {
         startGameButton.removeEventListener('click', startMusicAndGame);
     }
 }
+document.addEventListener('DOMContentLoaded', () => {
+    startGameButton = window.startGameButton;
 
+    if (startGameButton) {
+        startGameButton.addEventListener('click', startMusicAndGame);
+    } else {
+        console.warn("Start game button not found! Starting game directly.");
+        startGame(); // Start the game directly if the button is missing
+    }
+});
 // You might need an initial call to set up the event listener for the start button
 // For example, in a script tag that runs after the DOM is loaded:
 // document.addEventListener('DOMContentLoaded', () => {
