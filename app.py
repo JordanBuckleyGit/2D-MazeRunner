@@ -95,10 +95,12 @@ def logout():
 def index():
     return render_template("menu.html")
 
-@app.route("/game")
+@app.route('/game')
 @login_required
 def game():
-    return render_template("game.html")
+    user = g.user
+    is_admin = user == "admin"  # Check if the username is "admin"
+    return render_template('game.html', user=user, is_admin=is_admin)
 
 @app.route('/references')
 @login_required
@@ -115,6 +117,10 @@ def user():
     user_id = session.get("user_id")
     user_data = db.execute("SELECT * FROM users WHERE user_id = ?;", (user_id,)).fetchone()
     return render_template("profile.html", user=user_data)
+
+@app.before_request
+def logged_in_user():
+    g.user = session.get("user_id", None)
 
 ##############
 # store score

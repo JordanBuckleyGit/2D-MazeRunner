@@ -258,20 +258,35 @@ function drawHUD() {
     const seconds = Math.floor((gameTime % 60000) / 1000);
     context.fillText(`⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}`,
         2 * canvas.width / 3, canvas.height - hudHeight / 2 + 8);
+
+    if (isAdmin) {
+        context.fillStyle = '#00ff00';
+        context.fillText(`Admin Mode`, canvas.width - 150, canvas.height - hudHeight / 2 + 8);
+    }
 }
 
 function updatePlayer() {
     let newX = player.x;
     let newY = player.y;
 
-    let canMoveX = true;
-    let canMoveY = true;
-
+    // Calculate new positions based on movement flags
     if (moveLeft) newX -= player.speed;
     if (moveRight) newX += player.speed;
     if (moveUp) newY -= player.speed;
     if (moveDown) newY += player.speed;
 
+    // Admins can move freely without restrictions
+    if (isAdmin) {
+        player.x = newX;
+        player.y = newY;
+        return; // Skip further checks for admins
+    }
+
+    // Non-admin movement logic
+    let canMoveX = true;
+    let canMoveY = true;
+
+    // Check X-axis movement
     let colX = Math.floor(newX / tileSize);
     let rowX = Math.floor(player.y / tileSize);
     let colRightX = Math.floor((newX + player.size - 1) / tileSize);
@@ -281,6 +296,7 @@ function updatePlayer() {
         canMoveX = false;
     }
 
+    // Check Y-axis movement
     let colY = Math.floor(player.x / tileSize);
     let rowY = Math.floor(newY / tileSize);
     let colRightY = Math.floor((player.x + player.size - 1) / tileSize);
@@ -290,11 +306,13 @@ function updatePlayer() {
         canMoveY = false;
     }
 
+    // Update player position if movement is valid
     if (canMoveX) player.x = newX;
     if (canMoveY) player.y = newY;
 
+    // Check for health item collection
     if (!healthItem.collected &&
-        health < 3 && 
+        health < 3 &&
         player.x < healthItem.x + tileSize &&
         player.x + player.size > healthItem.x &&
         player.y < healthItem.y + tileSize &&
@@ -452,6 +470,10 @@ function drawEnemies() {
 }
 
 function isValidMove(x, y) {
+    if (player.x === x && player.y === y && isAdmin) {
+        return true; // Admin players can move through walls
+    }
+
     let col = Math.floor(x / tileSize);
     let row = Math.floor(y / tileSize);
 
@@ -530,6 +552,11 @@ function drawKeys() {
 }
 
 function checkKeyCollection() {
+    if (isAdmin) {
+        keysCollected = maxKeys;
+        return;
+    }
+
     keys.forEach(key => {
         if (
             !key.collected &&
@@ -657,6 +684,9 @@ function stop(outcome_txt) {
     let data = new FormData();
     data.append("level", level);
 
+    // Initialize xhttp as a new XMLHttpRequest object
+    xhttp = new XMLHttpRequest();
+
     xhttp.addEventListener("readystatechange", function () {
         if (xhttp.readyState === 4) {
             console.log("XHR readyState:", xhttp.readyState);
@@ -667,7 +697,7 @@ function stop(outcome_txt) {
             }
         }
     });
-    
+
     xhttp.open("POST", "/store_score", true);
     xhttp.send(data);
 
@@ -677,7 +707,7 @@ function stop(outcome_txt) {
         backgroundMusic.currentTime = 0;
     }
 }
-
+console.log("User:", user);
 function handle_response() {
     if (xhttp.readyState === 4 && xhttp.status === 200) {
         console.log(xhttp.responseText === "success" ? "Yes" : "No");

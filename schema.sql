@@ -2,7 +2,8 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
     user_id TEXT PRIMARY KEY,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    is_admin BOOLEAN DEFAULT 0 -- Add is_admin column with a default value of 0 (non-admin)
 );
 
 DROP TABLE IF EXISTS leaderboards;
@@ -14,5 +15,4 @@ CREATE TABLE leaderboards (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-SELECT *
-FROM leaderboards;
+SELECT user_id, is_admin FROM users;
