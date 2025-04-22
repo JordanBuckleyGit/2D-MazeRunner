@@ -8,7 +8,11 @@ CREATE TABLE users (
 DROP TABLE IF EXISTS leaderboards;
 
 CREATE TABLE leaderboards (
-    user_id TEXT PRIMARY KEY,
-    score INTEGER NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Use an auto-incrementing ID as the primary key
+    user_id TEXT NOT NULL, -- Keep user_id to link to the users table
+    level INTEGER NOT NULL, -- Add a column for the level
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+SELECT *
+FROM leaderboards;

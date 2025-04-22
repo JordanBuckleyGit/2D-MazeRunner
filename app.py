@@ -100,6 +100,11 @@ def index():
 def game():
     return render_template("game.html")
 
+@app.route('/references')
+@login_required
+def references():
+    return render_template("references.html")
+
 ############
 # user 
 ############
@@ -110,6 +115,68 @@ def user():
     user_id = session.get("user_id")
     user_data = db.execute("SELECT * FROM users WHERE user_id = ?;", (user_id,)).fetchone()
     return render_template("profile.html", user=user_data)
+
+##############
+# store score
+##############
+@app.route('/leaderboard')
+@login_required
+def leaderboard():
+    db = get_db()
+    leaderboard_data = db.execute(
+        "SELECT user_id, level FROM leaderboards ORDER BY level DESC LIMIT 10;"
+    ).fetchall()
+    return render_template("leaderboard.html", leaderboard=leaderboard_data)
+
+@app.route('/store_score', methods=['POST'])
+@login_required
+def store_level():
+    level = request.form.get('level')  # Get the level from the request
+    user_id = g.user
+
+    if level is None or user_id is None:
+        return "fail", 400
+
+    try:
+        level = int(level)
+        db = get_db()
+
+        # Insert or update the level for the user
+        existing_entry = db.execute(
+            "SELECT * FROM leaderboards WHERE user_id = ?;", (user_id,)
+        ).fetchone()
+
+        if existing_entry:
+            # Update the level if the new level is higher
+            if level > existing_entry["level"]:
+                db.execute(
+                    "UPDATE leaderboards SET level = ? WHERE user_id = ?;",
+                    (level, user_id)
+                )
+        else:
+            # Insert a new entry if none exists
+            db.execute(
+                "INSERT INTO leaderboards (user_id, level) VALUES (?, ?);",
+                (user_id, level)
+            )
+
+        db.commit()
+        return "success", 200
+
+    except ValueError:
+        return "fail", 400
+    except Exception as e:
+        print(f"Database error: {e}")
+        return "fail", 500
+    
+
+@app.route('/game_over')
+@login_required
+def game_over():
+    level = request.args.get('level', 0)
+    user = g.user
+    return render_template('game_over.html', level=level, user=user)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -76,9 +76,9 @@ const playerImg = new Image();
 playerImg.src = 'static/images/player.png';
 
 const wallTexture = new Image();
-wallTexture.src = 'static/images/wall.png';
+// wallTexture.src = 'static/images/wall.png';
 const tileSprite = new Image();
-tileSprite.src = 'static/images/tiles.png';
+// tileSprite.src = 'static/images/tiles.png';
 
 const tileset = new Image();
 tileset.src = 'static/images/Dungeon_Tileset.png';
@@ -328,7 +328,8 @@ function gameLoop() {
         updateEnemies();
         drawPlayer();
         drawEnemies();
-
+        checkGameEnd();
+        
         checkKeyCollection();
         checkDoorInteraction();
 
@@ -636,23 +637,80 @@ function deactivate(event) {
     if (event.key === "ArrowDown") moveDown = false;
 }
 
+function checkGameEnd() {
+    console.log("Player health:", health); // Debugging
+    if (health < 0) {
+        console.log("Game Over triggered"); // Debugging
+        stop("Game Over!");
+    } else if (player.reachedGoal) {
+        console.log("You Win triggered"); // Debugging
+        stop("You Win!");
+    }
+}
+
 function stop(outcome_txt) {
     window.removeEventListener("keydown", activate, false);
     window.removeEventListener("keyup", deactivate, false);
     cancelAnimationFrame(request_id);
-    document.querySelector("#outcome").innerHTML = outcome_txt + " Score: " + score;
 
+    // Send the level data to the server
     let data = new FormData();
-    data.append("score", score);
+    data.append("level", level);
 
-    xhttp = new XMLHttpRequest();
-    xhttp.addEventListener("readystatechange", handle_response, false);
+    xhttp.addEventListener("readystatechange", function () {
+        if (xhttp.readyState === 4) {
+            console.log("XHR readyState:", xhttp.readyState);
+            console.log("XHR status:", xhttp.status);
+            if (xhttp.status === 200) {
+                console.log("Redirecting...");
+                window.location.href = `/game_over?level=${level}&user=${user}`;
+            }
+        }
+    });
+    
     xhttp.open("POST", "/store_score", true);
     xhttp.send(data);
+
+    // Stop the background music
+    if (backgroundMusic) {
+        backgroundMusic.pause();
+        backgroundMusic.currentTime = 0;
+    }
 }
 
 function handle_response() {
     if (xhttp.readyState === 4 && xhttp.status === 200) {
         console.log(xhttp.responseText === "success" ? "Yes" : "No");
     }
+}
+
+
+const backgroundMusic = document.getElementById('background-music');
+
+// --- In your startMusicAndGame function (or wherever your game starts after user interaction) ---
+
+function startMusicAndGame() {
+    const playPromise = backgroundMusic.play();
+
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            // Autoplay started successfully
+            console.log('Background music started.');
+            startGame(); // Start the rest of your game
+        }).catch(error => {
+            // Autoplay was prevented.
+            console.log('Autoplay prevented. Game starting without music for now.', error);
+            startGame(); // Start the game even if music didn't autoplay
+            // You might want to add a visual indicator or button for the user to enable music
+        });
+    } else {
+        // Fallback for older browsers that don't return a Promise
+        startGame(); // Just start the game
+    }
+
+    // Ensure the music loops
+    backgroundMusic.loop = true; // Make sure this is set to true
+
+    // Remove the event listener after the first interaction
+    startGameButton.removeEventListener('click', startMusicAndGame);
 }

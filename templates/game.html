@@ -8,10 +8,16 @@
 {% block canvas %}
 <div class="game-container">
     <canvas id="background"></canvas>
+    <audio id="background-music" loop>
+        <source src="{{ url_for('static', filename='images/music.mp3') }}" type="audio/mpeg">
+    </audio>
 </div>
 {% endblock %}
 
 
 {% block content %}
-    <!-- Game UI elements go here -->
+<button id="start-game-button">Start Dungeon Crawl</button>
+
+<div id="outcome"></div> {# Example if you use the 'outcome' div #}
+
 {% endblock %}

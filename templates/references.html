@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='references.css') }}">
+{% endblock %}
+
+{% block main_content %}
+<main>
+    <h1>Reference Page</h1>
+    <ul>
+        <li><a href="https://www.example.com/reference1" target="_blank">Reference 1</a></li>
+        <li><a href="https://www.example.com/reference2" target="_blank">Reference 2</a></li>
+        <li><a href="https://www.example.com/reference3" target="_blank">Reference 3</a></li>
+        <li><a href="https://www.example.com/reference4" target="_blank">Reference 4</a></li>
+        <li><a href="https://www.example.com/reference5" target="_blank">Reference 5</a></li>
+        <li><a href="https://www.example.com/reference6" target="_blank">Reference 6</a></li>
+        <li><a href="https://www.example.com/reference7" target="_blank">Reference 7</a></li>
+        <li><a href="https://www.example.com/reference8" target="_blank">Reference 8</a></li>
+    </ul>
+</main>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='leaderboard.css') }}">
+{% endblock %}
+
+{% block main_content %}
+<section class="leaderboard">
+    <h1>Leaderboard</h1>
+    {% if message %}
+        <p class="message">{{ message }}</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>User</th>
+                    <th>Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in leaderboard %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ entry['user_id'] }}</td>
+                        <td>{{ entry['level'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</section>
+{% endblock %}

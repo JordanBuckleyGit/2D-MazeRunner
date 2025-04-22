@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const startGameBtn = document.getElementById('start-game');
     const leaderboardBtn = document.getElementById('view-leaderboard');
     const profileBtn = document.getElementById('profile');
+    const referenceBtn = document.getElementById('references');
     
     createCursorTrail();
     
@@ -75,6 +76,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         });
     }
+        if (referenceBtn) {
+            referenceBtn.addEventListener('click', function () {
+                document.getElementById('menu').style.transform = 'translateX(-50px)';
+                document.getElementById('menu').style.opacity = '0';
+                document.getElementById('menu').style.filter = 'blur(5px)';
+        
+                setTimeout(() => {
+                    window.location.href = '/references';
+                }, 500);
+            });
+        }
     
     function playSound(type) {
         try {
