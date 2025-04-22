@@ -6,7 +6,6 @@ let fpsInterval = 1000 / 30;
 let now;
 let then = Date.now();
 
-// Configuration Variables
 let tileSize = 32; // Size of each tile in the tileset
 let tilesetCols = 4; // Number of columns in the tileset
 let tilesetRows = 2; // Number of rows in the tileset
@@ -15,8 +14,9 @@ let tilesetRows = 2; // Number of rows in the tileset
 let tileMapping = {
     0: { col: 1, row: 1, width: 32, height: 32 }, // Floor tile
     1: { col: 1, row: 2, width: 32, height: 32 }, // Wall tile
-    2: { col: 1, row: 4, width: 32, height: 16 }, // Door tile
+    2: { col: 7, row: 3, width: 16, height: 16 }, // Door tile
     health: { col: 8, row: 9, width: 16, height: 16 }, // Health item
+    potion: { col: 7, row: 8, width: 16, height: 16 },
     key: { col: 9, row: 9, width: 16, height: 16 } // Key
 };
 
@@ -41,6 +41,13 @@ let healthItem = {
     y: 0,
     collected: false
 };
+
+let potion = {
+    x: 0,
+    y: 0,
+    collected: false
+}
+
 let level = 1; // This is used as the score now
 let gameTime = 0;
 
@@ -71,7 +78,7 @@ let enemies = [];
 let initCalled = false;
 
 // Admin mode flag (assuming this is a global flag)
-let isAdmin = false; // Initialize to false or load from user data
+let isAdmin = window.isAdmin; // Use the value passed from the template
 
 // User identifier for saving scores (assuming this is set elsewhere, e.g., from a template)
 let user = ""; // Initialize to an empty string
@@ -92,10 +99,6 @@ let tileSprite = new Image();
 
 let tileset = new Image();
 tileset.src = 'static/images/Dungeon_Tileset.png';
-
-// let healthItemImg = new Image();
-// healthItemImg.src = 'static/images/health.png'; // This line is commented out in your original
-
 
 // Image loading trigger (assuming wallTexture and playerImg are the main ones before init)
 wallTexture.onload = playerImg.onload = function () {
@@ -183,6 +186,7 @@ function generateMaze() {
     }
 
     placeHealthItem();
+    placePotion(); // Place the potion
     placeKeys();
 }
 
@@ -280,6 +284,12 @@ function drawHUD() {
         context.fillText(`Admin Mode`, canvas.width - 150, canvas.height - hudHeight / 2 + 8);
     }
 }
+if (isAdmin) {
+    console.log("Admin Mode Enabled");
+    // Admin-specific logic here
+} else {
+    console.log("Admin Mode Disabled");
+}
 
 function updatePlayer() {
     let newX = player.x;
@@ -290,11 +300,8 @@ function updatePlayer() {
     if (moveUp) newY -= player.speed;
     if (moveDown) newY += player.speed;
 
-    if (isAdmin) {
-        player.x = newX;
-        player.y = newY;
-        return;
-    }
+    if (isValidMove(newX, player.y, true)) player.x = newX;
+    if (isValidMove(player.x, newY, true)) player.y = newY;
 
     let canMoveX = true;
     let canMoveY = true;
@@ -337,6 +344,8 @@ function updatePlayer() {
 }
 
 function gameLoop() {
+    console.log("Game loop running..."); // Debugging log
+
     request_id = requestAnimationFrame(gameLoop);
 
     now = Date.now();
@@ -352,6 +361,7 @@ function gameLoop() {
         updateCamera();
         drawMaze();
         drawHealthItem();
+        drawPotion(); // Draw the potion
         drawKeys();
         drawDoor();
         updatePlayer();
@@ -361,6 +371,7 @@ function gameLoop() {
         checkGameEnd();
 
         checkKeyCollection();
+        checkPotionCollection(); // Check if the player collects the potion
         checkDoorInteraction();
 
         drawHUD();
@@ -403,11 +414,6 @@ function generateEnemies() {
 
 function updateEnemies() {
     enemies.forEach(enemy => {
-        // let playerRow = Math.floor(player.y / tileSize);
-        // let playerCol = Math.floor(player.x / tileSize);
-        // let enemyRow = Math.floor(enemy.y / tileSize);
-        // let enemyCol = Math.floor(enemy.x / tileSize);
-
         let canSeePlayer = false;
         let distance = Math.sqrt(Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2));
         if (distance < 300) {
@@ -453,8 +459,14 @@ function updateEnemies() {
             }
         }
 
-        if (!isAdmin && health > 0 && isValidMove(enemy.x, enemy.y) && player.x < enemy.x + enemy.size && player.x + player.size > enemy.x && player.y < enemy.y + enemy.size && player.y + player.size > enemy.y) {
+        // Enemy collision with player
+        if (!isAdmin && isValidMove(enemy.x, enemy.y) &&
+            player.x < enemy.x + enemy.size &&
+            player.x + player.size > enemy.x &&
+            player.y < enemy.y + enemy.size &&
+            player.y + player.size > enemy.y) {
             health--;
+            console.log("Player hit by enemy! Health:", health); // Debugging log
             player.x = tileSize;
             player.y = tileSize;
         }
@@ -471,8 +483,8 @@ function drawEnemies() {
     context.restore();
 }
 
-function isValidMove(x, y) {
-    if (isAdmin) {
+function isValidMove(x, y, isPlayer = false) {
+    if (isPlayer && isAdmin) {
         return true;
     }
 
@@ -651,6 +663,73 @@ function drawHealthItem() {
     context.restore();
 }
 
+function placePotion() {
+    let validPosition = false;
+
+    while (!validPosition) {
+        let col = Math.floor(Math.random() * gridCols);
+        let row = Math.floor(Math.random() * gridRows);
+
+        if (maze[row][col] === 0) { // Ensure the position is valid (not a wall)
+            potion.x = col * tileSize;
+            potion.y = row * tileSize;
+            validPosition = true;
+        }
+    }
+
+    potion.collected = false;
+}
+
+function drawPotion() {
+    context.save();
+    context.scale(camera.zoom, camera.zoom);
+    context.translate(-camera.x, -camera.y);
+
+    if (!potion.collected) {
+        let potionTile = tileMapping.potion; // Use the potion tile mapping
+        let sx = potionTile.col * potionTile.width;
+        let sy = potionTile.row * potionTile.height;
+
+        context.drawImage(
+            tileset,
+            sx, sy, potionTile.width, potionTile.height,
+            potion.x, potion.y, tileSize, tileSize
+        );
+    }
+
+    context.restore();
+}
+
+function checkPotionCollection() {
+    if (
+        !potion.collected &&
+        player.x < potion.x + tileSize &&
+        player.x + player.size > potion.x &&
+        player.y < potion.y + tileSize &&
+        player.y + player.size > potion.y
+    ) {
+        potion.collected = true;
+        teleportPlayer(); // Teleport the player to a random valid position
+    }
+}
+
+function teleportPlayer() {
+    let validPosition = false;
+
+    while (!validPosition) {
+        let col = Math.floor(Math.random() * gridCols);
+        let row = Math.floor(Math.random() * gridRows);
+
+        if (maze[row][col] === 0) { // Ensure the position is valid (not a wall)
+            player.x = col * tileSize;
+            player.y = row * tileSize;
+            validPosition = true;
+        }
+    }
+
+    console.log("Player teleported to:", player.x, player.y); // Debugging log
+}
+
 function activate(event) {
     if (event.key === "ArrowLeft") moveLeft = true;
     if (event.key === "ArrowRight") moveRight = true;
@@ -666,37 +745,47 @@ function deactivate(event) {
 }
 
 function checkGameEnd() {
-     if (health < 0) {
-         stop("Game Over!");
-     }
-    // Assuming player.reachedGoal is set elsewhere when the game completion condition is met
-    // else if (player.reachedGoal) {
-    //     stop("You Win!");
-    // }
+    console.log("Checking game end conditions..."); // Debugging log
+
+    if (health < 0) {
+        console.log("Game over! Health is below 0."); // Debugging log
+        stop("Game Over!");
+    } else if (player.reachedGoal) {
+        console.log("Player reached the goal!"); // Debugging log
+        stop("You Win!");
+    }
 }
 
 function stop(outcome_txt) {
+    console.log("Stopping the game with outcome:", outcome_txt); // Debugging log
+
+    // Remove event listeners
     window.removeEventListener("keydown", activate, false);
     window.removeEventListener("keyup", deactivate, false);
+
+    // Cancel the game loop
     cancelAnimationFrame(request_id);
 
-    outcomeElement.innerHTML = outcome_txt + " Final Level: " + level; // Display final level
+    // Display the outcome
+    if (outcomeElement) {
+        outcomeElement.innerHTML = outcome_txt + " Final Level: " + level;
+    } else {
+        console.error("Outcome element not found!");
+    }
 
+    // Send the level to the server
     let data = new FormData();
-    data.append("level", level); // Send the level
+    data.append("level", level);
 
     xhttp = new XMLHttpRequest();
-
     xhttp.addEventListener("readystatechange", function () {
         if (xhttp.readyState === 4) {
             if (xhttp.status === 200) {
-                 console.log("Level saved successfully.");
-                 // Redirect after successful save
-                 window.location.href = `/game_over?level=${level}&user=${user}`;
+                console.log("Level saved successfully.");
+                window.location.href = `/game_over?level=${level}&user=${user}`;
             } else {
-                 console.log("Failed to save level. Status:", xhttp.status);
-                 // Redirect even on failure, maybe to a different page or show an error
-                 window.location.href = `/game_over?level=${level}&user=${user}`; // Or handle differently
+                console.error("Failed to save level. Redirecting anyway.");
+                window.location.href = `/game_over?level=${level}&user=${user}`;
             }
         }
     });
@@ -704,6 +793,7 @@ function stop(outcome_txt) {
     xhttp.open("POST", "/store_score", true);
     xhttp.send(data);
 
+    // Stop the background music
     if (backgroundMusic) {
         backgroundMusic.pause();
         backgroundMusic.currentTime = 0;

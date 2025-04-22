@@ -3,8 +3,11 @@
 {% block scripts %}
     <link rel="stylesheet" href="{{ url_for('static', filename='game.css') }}">
     <script>
-        let user = "{{ user }}"; // Pass the user name as a string
-        const isAdmin = "{{ 'true' if is_admin else 'false' }}" === "true"; // Convert to boolean
+        // Set variables on the global window object so game.js module can access them
+        window.user = "{{ user }}"; // Pass the user name as a string
+        window.isAdmin = {{ 'true' if is_admin else 'false' }}; // Render 'true' or 'false' directly
+        console.log("HTML Inline Script - User:", window.user);
+        console.log("HTML Inline Script - Is Admin:", window.isAdmin);
     </script>
     
     <script type="module" src="{{ url_for('static', filename='game.js') }}"></script>

@@ -15,4 +15,5 @@ CREATE TABLE leaderboards (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-SELECT user_id, is_admin FROM users;
+SELECT *
+FROM users;

@@ -98,8 +98,16 @@ def index():
 @app.route('/game')
 @login_required
 def game():
-    user = g.user
-    is_admin = user == "admin"  # Check if the username is "admin"
+    user = g.user  # Get the logged-in user's username from the session
+    db = get_db()
+
+    # Query the database to check if the user is an admin
+    user_data = db.execute("SELECT is_admin FROM users WHERE user_id = ?;", (user,)).fetchone()
+    is_admin = user_data["is_admin"] == 1 if user_data else False
+
+    # Debugging output
+    print(f"User: {user}, Is Admin: {is_admin}")
+
     return render_template('game.html', user=user, is_admin=is_admin)
 
 @app.route('/references')
